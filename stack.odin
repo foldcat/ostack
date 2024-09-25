@@ -90,5 +90,5 @@ destroy_stack :: proc(stack: ^$L/Stack($T), alloc := context.allocator) {
 		current_node = current_node.next
 		free(temp, alloc)
 	}
-	free(stack)
+	free(stack, alloc)
 }

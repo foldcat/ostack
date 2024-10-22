@@ -37,16 +37,17 @@ stack_pop :: proc(stack: ^$L/Stack($T), alloc := context.allocator) -> (result: 
 	}
 	tail := stack.next.next
 	if tail != nil {
-		node_for_delete := stack^.next
+		node_for_delete := stack.next
 		ret_val := node_for_delete.value
 		free(node_for_delete, alloc)
 		stack.next = tail
 		return ret_val, true
 	} else {
+		ret_val := stack.next.value
 		free(stack.next, alloc)
 		stack.next = nil
+		return ret_val, true
 	}
-
 	a: T
 	return a, false
 }

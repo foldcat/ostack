@@ -2,66 +2,64 @@ package stack
 
 import "core:fmt"
 import "core:mem"
-
-Node :: struct($T: typeid) {
-	value: T,
-	next:  ^Node(T),
-}
+import "core:os"
 
 Stack :: struct($T: typeid) {
-	next: ^Node(T),
+	value: T,
+	next:  ^Stack(T),
 }
 
-make_stack :: proc($T: typeid, alloc := context.allocator) -> ^Stack(T) {
-	return new_clone(Stack(T){next = nil}, alloc)
+make_stack :: proc(
+	$T: typeid,
+	alloc := context.allocator,
+) -> (
+	stack: ^Stack(T),
+	err: mem.Allocator_Error,
+) {
+	// first item is a dud
+	return new(Stack(T), alloc)
 }
 
-stack_push :: proc(stack: ^$L/Stack($T), target: T, alloc := context.allocator) {
-	if stack.next == nil {
-		res, err := new_clone(Node(T){value = target, next = nil}, alloc)
-		stack.next = res
-	} else {
-		next_ptr := stack.next
-		res, err := new_clone(Node(T){value = target, next = next_ptr}, alloc)
-		stack.next = res
+stack_push :: proc(
+	stack: ^$L/Stack($T),
+	target: T,
+	alloc := context.allocator,
+) -> (
+	err: mem.Allocator_Error,
+) {
+	new_elem, errn := new_clone(Stack(T){value = target, next = stack.next})
+	err = errn
+	if err != os.ERROR_NONE {
+		return err
 	}
+	stack.next = new_elem
+	return mem.Allocator_Error.None
 }
 
 
 // pops an item off the stack, if the stack is empty, 
 // ok's value will be false, otherwise true
-stack_pop :: proc(stack: ^$L/Stack($T), alloc := context.allocator) -> (result: T, ok: bool) {
+stack_pop :: proc(stack: ^$L/Stack($T), alloc := context.allocator) -> (result: T, ok := false) {
 	if stack.next == nil {
-		a: T
-		return a, false
-	}
-	tail := stack.next.next
-	if tail != nil {
-		node_for_delete := stack.next
-		ret_val := node_for_delete.value
-		free(node_for_delete, alloc)
-		stack.next = tail
-		return ret_val, true
+		return
 	} else {
-		ret_val := stack.next.value
-		free(stack.next, alloc)
-		stack.next = nil
-		return ret_val, true
+		result = stack.next.value
+		temp := stack.next.next
+		free(stack.next)
+		stack.next = temp
+		ok = true
+		return
 	}
-	a: T
-	return a, false
 }
 
 // peeks the stack, if the stack is empty, 
 // ok's value will be false, otherwise true
-stack_peek :: proc(stack: ^$L/Stack($T), alloc := context.allocator) -> (result: T, ok: bool) {
-	res := stack.next
-	if res != nil {
-		return res.value, true
-	} else {
-		a: T
-		return a, false
+stack_peek :: proc(stack: ^$L/Stack($T), alloc := context.allocator) -> (result: T, ok := false) {
+	if stack.next != nil {
+		ok = true
+		result = stack.next.value
 	}
+	return
 }
 
 

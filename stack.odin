@@ -16,7 +16,7 @@ make_stack :: proc(
 	stack: ^Stack(T),
 	err: mem.Allocator_Error,
 ) {
-	// first item is a dud
+	// first item stores nothing
 	return new(Stack(T), alloc)
 }
 
@@ -24,11 +24,8 @@ stack_push :: proc(
 	stack: ^$L/Stack($T),
 	target: T,
 	alloc := context.allocator,
-) -> (
-	err: mem.Allocator_Error,
-) {
-	new_elem, errn := new_clone(Stack(T){value = target, next = stack.next})
-	err = errn
+) -> mem.Allocator_Error {
+	new_elem, err := new_clone(Stack(T){value = target, next = stack.next})
 	if err != os.ERROR_NONE {
 		return err
 	}
